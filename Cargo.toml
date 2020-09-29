@@ -49,7 +49,7 @@ skulpin_winit = ["skulpin-renderer-winit", "skulpin-app-winit"]
 skulpin_sdl2 = ["skulpin-renderer-sdl2"]
 skulpin_glfw = ["skulpin-renderer-glfw"]
 
-default = ["skulpin_winit", "skulpin_sdl2", "skia_complete"]
+default = ["skulpin_winit", "skulpin_sdl2", "skia_complete", "skulpin_glfw"]
 
 [dependencies]
 skulpin-renderer = { version = "0.4", path = "skulpin-renderer" }

@@ -1,4 +1,6 @@
 // This example shows how to use the renderer with glfw directly.
+use std::{sync::mpsc::Receiver, sync::mpsc::channel, thread::Builder};
+
 use skulpin::{skia_safe, LogicalSize, RendererBuilder, CoordinateSystemHelper};
 
 use skulpin::glfw;
@@ -55,6 +57,14 @@ fn main() {
 
     let mut frame_count = 0;
 
+    let render_context = window.render_context();
+    let (send, recv) = channel();
+
+    let render_task = Builder::new().name("render task".to_string());
+    let render_task_done = render_task.spawn(move || {
+        render(render_context, recv);
+    });
+
     while !window.should_close() {
         glfw_window.poll_events();
         for (_, event) in glfw::flush_messages(&events) {
@@ -92,6 +102,32 @@ fn main() {
             )
             .unwrap();
     }
+
+    // Tell the render task to exit.
+    send.send(()).ok().expect("Failed signal to render thread.");
+
+    // Wait for acknowledgement that the rendering was completed.
+    let _ = render_task_done;
+}
+
+fn render(
+    mut context: glfw::RenderContext,
+    finish: Receiver<()>,
+) {
+    context.make_current();
+    loop {
+        // Check if the rendering should stop.
+        if finish.try_recv() == Ok(()) {
+            break;
+        };
+
+        // Perform rendering calls
+
+        context.swap_buffers();
+    }
+
+    // required on some platforms
+    glfw::make_context_current(None);
 }
 
 /// Called when winit passes us a WindowEvent::RedrawRequested
